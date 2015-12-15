@@ -1,10 +1,12 @@
 ActiveRecord::Schema.define version: 0 do
   create_table :tags, force: true do |t|
     t.string :name
+    t.string :lower_name
     t.integer :taggings_count, default: 0
     t.string :type
   end
   add_index 'tags', ['name'], name: 'index_tags_on_name', unique: true
+  add_index 'tags', ['lower_name'], name: 'index_tags_on_lower_name'
 
   create_table :taggings, force: true do |t|
     t.references :tag

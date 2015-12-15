@@ -23,11 +23,13 @@ module ActsAsTaggableOn
     scope :most_used, ->(limit = 20) { order('taggings_count desc').limit(limit) }
     scope :least_used, ->(limit = 20) { order('taggings_count asc').limit(limit) }
 
+    after_save :set_lower_name
+
     def self.named(name)
       if ActsAsTaggableOn.strict_case_match
         where(["name = #{binary}?", as_8bit_ascii(name)])
       else
-        where(['LOWER(name) = LOWER(?)', as_8bit_ascii(unicode_downcase(name))])
+        where(['lower_name = LOWER(?)', as_8bit_ascii(unicode_downcase(name))])
       end
     end
 
@@ -101,6 +103,12 @@ module ActsAsTaggableOn
       read_attribute(:count).to_i
     end
 
+    private
+
+    def set_lower_name
+      self.class.unscoped.where(self.class.primary_key => id).update_all('lower_name=LOWER(name)')
+    end
+
     class << self
 
 
@@ -139,7 +147,7 @@ module ActsAsTaggableOn
         if ActsAsTaggableOn.strict_case_match
           sanitize_sql(["name = #{binary}?", as_8bit_ascii(tag)])
         else
-          sanitize_sql(['LOWER(name) = LOWER(?)', as_8bit_ascii(unicode_downcase(tag))])
+          sanitize_sql(['lower_name = LOWER(?)', as_8bit_ascii(unicode_downcase(tag))])
         end
       end
     end
